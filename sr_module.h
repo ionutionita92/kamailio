@@ -66,7 +66,7 @@
 
 /**
  * @brief type used for the mod_register function export
- * 
+ *
  * mod_register is a function called when loading a module
  * (if present), prior to registering the module exports.
  * @param path path to the module, including file name
@@ -84,7 +84,7 @@ typedef  struct module_exports* (*module_register)(void);
 
 /**
  * @brief main two parameter module function
- * 
+ *
  * Main two parameter module function, default and oldest version.
  * @param sip_msg SIP message
  * @param param1 first parameter
@@ -100,7 +100,7 @@ typedef  int (*cmd_function6)(struct sip_msg*,  char*, char*, char*,
 												char*, char*, char*);
 /**
  * @brief variable number of parameter module function
- * 
+ *
  * Variable number of parameter module function, takes as param the sip_msg,
  * extra parameters number and a pointer to an array of parameters
  * @param sip_msg SIP message
