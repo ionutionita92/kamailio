@@ -100,6 +100,8 @@ typedef enum request_method {
 #define FL_BODY_MULTIPART    (1<<17)  /* body modified is multipart */
 #define FL_RR_ADDED          (1<<18)  /* Record-Route header was added */
 #define FL_UAC_AUTH          (1<<19)  /* Proxy UAC-like authentication */
+#define FL_SIPTRACE			 (1<<24)  /* 1and1 custom; flag used by siptrace
+										 24 was used to be the same as master branch(5.3) */
 
 /* WARNING: Value (1 << 28) is temporarily reserved for use in kamailio call_control
  * module (flag  FL_USE_CALL_CONTROL )! */

@@ -3,29 +3,29 @@
 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" [
 
 <!-- Include general documentation entities -->
-<!ENTITY % docentities SYSTEM "../../../docbook/entities.xml">
+<!ENTITY % docentities SYSTEM "../../../../doc/docbook/entities.xml">
 %docentities;
 
 ]>
 <!-- Module User's Guide -->
 
 <chapter>
-	
+
 	<title>&adminguide;</title>
-	
+
 	<section>
 	<title>Overview</title>
 	<para>
 		The SIPtrace module offer a possibility to store incoming and outgoing SIP
-		messages in a database and/or duplicate to the capturing server (using <acronym>HEP</acronym>
-		the Homer encapsulation protocol or plain SIP mode)
+		messages in a database and/or duplicate to the capturing server (using <acronym>HEP</acronym>,
+		the Homer encapsulation protocol, or plain SIP mode)
 	</para>
 	<para>
-		There are two ways of storing information:
+		There are multiple ways of storing information:
 		<itemizedlist>
 		<listitem>
 		<para>
-		by calling the sip_trace() method explicitely in the &kamailio; configuration
+		by calling the sip_trace() method explicitly in the &kamailio; configuration
 		file. In this case the original message is processed.
 		</para>
 		</listitem>
@@ -38,12 +38,16 @@
 		are logged.
 		</para>
 		</listitem>
+		<listitem>
+		<para>
+		by setting <quote>trace_mode</quote> to mirror all traffic.
+		</para>
+		</listitem>
 		</itemizedlist>
 	</para>
 
 	<para>
-	The tracing can be turned on/off using Kamailio <acronym>mi</acronym> or <acronym>RPC</acronym>
-	commands.
+	The tracing can be turned on/off using Kamailio <acronym>RPC</acronym> commands.
 	</para>
 	<para>
 	&ctltool; fifo sip_trace on
@@ -57,12 +61,12 @@
 	<section>
 		<title>&kamailio; Modules</title>
 		<para>
-		The following modules must be loaded before this module:
+		The following modules must be conditionally loaded before this module:
 			<itemizedlist>
 			<listitem>
 			<para>
 				<emphasis>A database module</emphasis> - Mysql, Postgres,
-				dbtext, unixODBC...
+				dbtext, unixODBC... Optional, if tracing to DB is enabled.
 			</para>
 			</listitem>
 			<listitem>
@@ -98,14 +102,14 @@
 		</para>
 		<para>
 		<emphasis>
-			Default value is "mysql://kamailio:kamailiorw@localhost/okamailio".
+			Default value is "&defaultdb;".
 		</emphasis>
 		</para>
 		<example>
 		<title>Set <varname>db_url</varname> parameter</title>
 		<programlisting format="linespecific">
 ...
-modparam("siptrace", "db_url", "mysql://user:passwd@host/dbname")
+modparam("siptrace", "db_url", "&exampledb;")
 ...
 </programlisting>
 		</example>
@@ -199,7 +203,7 @@ modparam("siptrace", "traced_user_avp", "$avp(s:user)")
 		store the SIP messages. If it is not set, the value of
 		<quote>table</quote> parameter is used. In this way one can select
 		dynamically where to store the traced messages. The table
-		must exists, and must have the same structure as the <quote>sip_trace</quote>
+		must exist, and must have the same structure as the <quote>sip_trace</quote>
 		table.
 		</para>
 		<para>
@@ -395,8 +399,9 @@ modparam("siptrace", "hep_mode_on", 1)
                 <title><varname>hep_version</varname> (integer)</title>
                 <para>
                 The parameter indicate the version of the HEP protocol.
-                Can be <quote>1</quote> or <quote>2</quote>. In HEPv2 the timestamp and capture agent ID
-                will be included to HEP header.
+                Can be <quote>1</quote>, <quote>2</quote> or <quote>3</quote>.
+                In HEPv2 and HEPv3 the timestamp and capture agent ID will be
+                included in the HEP header.
                 </para>
                 <para>
                 <emphasis>
@@ -407,7 +412,7 @@ modparam("siptrace", "hep_mode_on", 1)
                 <title>Set <varname>hep_version</varname> parameter</title>
                 <programlisting format="linespecific">
 ...
-modparam("siptrace", "hep_version", 2)
+modparam("siptrace", "hep_version", 3)
 ...
 </programlisting>
                 </example>
@@ -416,8 +421,8 @@ modparam("siptrace", "hep_version", 2)
                 <title><varname>hep_capture_id</varname> (integer)</title>
                 <para>
                 The parameter indicate the capture agent ID for the <acronym>HEPv2</acronym>
-                protocol.
-                Limitation: 16-bit integer.
+                or <acronym>HEPv3</acronym> protocol.
+                Limitation: 16-bit integer for HEPv2, 32-bit for HEPv3.
                 </para>
                 <para>
                 <emphasis>
@@ -425,8 +430,7 @@ modparam("siptrace", "hep_version", 2)
                 </emphasis>
                 </para>
                 <example>
-                <title>Set <varname>hep_capture_id</varname>
-                parameter</title>
+                <title>Set <varname>hep_capture_id</varname> parameter</title>
                 <programlisting format="linespecific">
 ...
 modparam("siptrace", "hep_capture_id", 234)
@@ -456,7 +460,7 @@ modparam("siptrace", "trace_delayed", 1)
 	<section id="siptrace.p.force_send_sock">
                 <title><varname>force_send_sock</varname> (str)</title>
                 <para>
-			The local interface in the form of SIP uri from where to send
+			The local interface in the form of SIP URI from where to send
 			the duplicated traffic. In the absence of this parameter
 			&kamailio; automatically picks an interface.
                 </para>
@@ -493,13 +497,32 @@ modparam("siptrace", "trace_mode", 1)
 </programlisting>
                 </example>
         </section>
+	<section id="siptrace.p.auth_key">
+                <title><varname>auth_key</varname> (integer)</title>
+                <para>
+A string with an authorization key.
+Supported on HEPv3 only.
+                </para>
+                <para>
+                Default value is empty.
+                </para>
+                <example>
+                <title>Set <varname>auth_key</varname>
+                parameter</title>
+                <programlisting format="linespecific">
+...
+modparam("siptrace", "auth_key", "spoihepuirthpeuia")
+...
+</programlisting>
+                </example>
+        </section>
 	</section>
 	
 	<section>
 	<title>Functions</title>
 	<section id="siptrace.f.sip_trace">
 		<title>
-		<function moreinfo="none">sip_trace([address])</function>
+		<function moreinfo="none">sip_trace([address][, correlation_id])</function>
 		</title>
 		<para>
 		Store or forward the current processed SIP message in database. It is stored in the
@@ -508,9 +531,13 @@ modparam("siptrace", "trace_mode", 1)
 		<para>Meaning of the parameters is as follows:</para>
 		<itemizedlist>
 		<listitem>
-		<para><emphasis>address</emphasis> - The address in form of SIP uri
+		<para><emphasis>address</emphasis> - The address in form of SIP URI
 		where to send a duplicate of traced message. This parameter trumps
 		duplicate_uri and allows tracing to more than one server.
+		</para>
+		<para><emphasis>correlation_id</emphasis> - A string with a correlation ID
+		to be added to the HEP header when using HEPv3.
+		It's possible to use PVs.
 		</para>
 		</listitem>
 		</itemizedlist>
@@ -529,6 +556,42 @@ sip_trace();
 ...
 sip_trace("sip:10.1.1.2:5085");
 ...
+sip_trace("sip:10.1.1.2:5085", "$ci-abc");
+...
+</programlisting>
+		</example>
+	</section>
+
+	<section id="siptrace.f.hlog">
+		<title>
+		<function moreinfo="none">hlog([correlation_id,] message)</function>
+		</title>
+		<para>
+		Sends a log event as a HEP3 packet to the homer host configured in
+		<emphasis>duplicate_uri</emphasis>.
+		</para>
+		<para>Meaning of the parameters is as follows:</para>
+		<itemizedlist>
+			<listitem>
+			<para><emphasis>correlation_id</emphasis> (optional) - Homer correlation
+			ID for this event. If this parameter is not set, the current message's
+			call-id will be used. (This parameter may contain PVs)
+			</para>
+			</listitem>
+			<listitem>
+			<para><emphasis>message</emphasis> - The text to send to Homer as log
+			event. (This parameter may contain PVs)
+			</para>
+			</listitem>
+		</itemizedlist>
+		<example>
+		<title><function>hlog()</function> usage</title>
+		<programlisting format="linespecific">
+...
+hlog("[cfg:$cfg(line)] This is a log from kamailio to Homer");
+...
+hlog("$hdr(P-MyID)", "Another one with a custom correlation ID");
+...
 </programlisting>
 		</example>
 	</section>
@@ -536,43 +599,6 @@ sip_trace("sip:10.1.1.2:5085");
 	</section>
 
     <section>
-	<title>MI Commands</title>
-	<section id="siptrace.m.sip_trace">
-		<title>
-		<function moreinfo="none">sip_trace</function>
-		</title>
-		<para>
-
-		</para>
-		<para>
-		Name: <emphasis>sip_trace</emphasis>
-		</para>
-		<para>Parameters: </para>
-		<itemizedlist>
-			<listitem><para>trace_mode : turns on/off SIP message tracing.
-			Possible values are:</para>
-			<itemizedlist>
-				<listitem><para> on </para></listitem> 
-				<listitem><para> off </para></listitem>
-			</itemizedlist>
-			<para>The parameter is optional - if missing, the command will
-			return the status of the SIP message tracing (as string 
-			<quote>on</quote> or <quote>off</quote> ) without changing
-			anything.</para>
-			</listitem>
-		</itemizedlist>
-
-		<para>
-		MI FIFO Command Format:
-		</para>
-		<programlisting  format="linespecific">
-		:sip_trace:_reply_fifo_file_
-		trace_mode
-		_empty_line_
-		</programlisting>
-	</section>
-	</section><!-- MI Commands -->
-    	<section>
 	<title>RPC Commands</title>
 	<section id="siptrace.r.siptrace.status">
 		<title>
@@ -586,21 +612,30 @@ sip_trace("sip:10.1.1.2:5085");
 		</para>
 		<para>Parameters: </para>
 		<itemizedlist>
-			<listitem><para>on or off: turns on/off SIP message tracing..
+			<listitem><para>on or off: turns on/off SIP message tracing.
 			Possible values are:</para>
 			<itemizedlist>
-				<listitem><para>on</para></listitem> 
+				<listitem><para>on</para></listitem>
 				<listitem><para>off</para></listitem>
 			</itemizedlist>
 			</listitem>
-			<listitem><para><quote>check</quote> does not change 
+			<listitem><para><quote>check</quote> does not change
 			siptrace status, just reports the current status.</para>
 			</listitem>
 		</itemizedlist>
-
+		<para>
+		RPC Command Format:
+		</para>
+		<programlisting  format="linespecific">
+...
+&kamcmd; siptrace.status on
+&kamcmd; siptrace.status off
+&kamcmd; siptrace.status check
+...
+		</programlisting>
 	</section>
 	</section><!-- RPC commands -->
-	
+
 	<section>
 		<title>Database setup</title>
 		<para>
@@ -619,8 +654,20 @@ sip_trace("sip:10.1.1.2:5085");
 	<title>Known issues</title>
 	<para>
 	Stateless forwarded messages (forward()) are not logged if you set the
-	flag, use sip_trace().
+	flag, use sip_trace() inside <emphasis>onsend_route</emphasis> block.
 	</para>
+	<example>
+	<title>Send relayed ACK message</title>
+	<programlisting format="linespecific">
+...
+onsend_route {
+    if (is_method("ACK")) {
+        sip_trace();
+    }
+}
+...
+</programlisting>
+	</example>
 	</section>
 	
 </chapter>
