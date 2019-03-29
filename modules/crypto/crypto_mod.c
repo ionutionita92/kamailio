@@ -33,6 +33,7 @@
 #include "../../basex.h"
 
 #include "crypto_uuid.h"
+#include "api.h"
 
 #include <openssl/evp.h>
 
@@ -67,6 +68,7 @@ static cmd_export_t cmds[]={
 		fixup_crypto_aes_encrypt, 0, ANY_ROUTE},
 	{"crypto_aes_decrypt", (cmd_function)w_crypto_aes_decrypt, 3,
 		fixup_crypto_aes_decrypt, 0, ANY_ROUTE},
+	{"load_crypto",        (cmd_function)load_crypto, 0, 0, 0, 0},
 	{0, 0, 0, 0, 0, 0}
 };
 

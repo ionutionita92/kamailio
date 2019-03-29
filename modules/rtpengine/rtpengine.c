@@ -76,6 +76,7 @@
 #include "../../dset.h"
 #include "../../route.h"
 #include "../../modules/tm/tm_load.h"
+#include "../../modules/crypto/api.h"
 #include "rtpengine.h"
 #include "rtpengine_funcs.h"
 #include "rtpengine_hash.h"
@@ -282,6 +283,7 @@ typedef struct rtpp_set_link {
 
 /* tm */
 static struct tm_binds tmb;
+struct crypto_binds rtpengine_cb;
 
 /*0-> disabled, 1 ->enabled*/
 unsigned int *natping_state=0;
@@ -1791,6 +1793,11 @@ mod_init(void)
 		LM_DBG("Default rtpp set %d found\n", setid_default);
 	}
 
+	if (load_crypto_api(&rtpengine_cb) != 0) {
+		LM_WARN("Crypto module not loaded! Won't use SHA1 hashing! Distribution "
+				"algorithm might not perform well under heavy load!\n");
+	}
+
 	return 0;
 }
 
@@ -2710,11 +2717,23 @@ select_rtpp_node_new(str callid, str viabranch, int do_test, struct rtpp_node **
 	unsigned i, sum, sumcut, weight_sum;
 	int was_forced = 0;
 
+	str hash_data;
+
+	if (rtpengine_cb.SHA1 == NULL) {
+		hash_data = callid;
+	} else {
+		if (rtpengine_cb.SHA1(&callid, &hash_data) < 0) {
+			LM_ERR("SHA1 hash in crypto module failed!\n");
+			return NULL;
+		}
+	}
+
 	/* XXX Use quick-and-dirty hashing algo */
 	sum = 0;
-	for(i = 0; i < callid.len; i++)
-		sum += callid.s[i];
-	sum &= 0xff;
+	for(i = 0; i < hash_data.len; i++)
+		sum += hash_data.s[i];
+	/* FIXME this seems to affect the distribution algorithm in a negative way */
+	// sum &= 0xff;
 
 retry:
 	weight_sum = 0;
