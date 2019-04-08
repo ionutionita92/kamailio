@@ -735,6 +735,10 @@ static int fixup_siptrace(void **param, int param_no)
 		}
 
 		*param = pkg_malloc(sizeof(trace_type));
+		if (*param == NULL) {
+			LM_ERR("no more pkg memory!\n");
+			return -1;
+		}
 		memcpy(*param, &trace_type, sizeof(trace_type));
 	}
 
@@ -1458,7 +1462,6 @@ static void trace_onreply_out(struct cell *t, int type, struct tmcb_params *ps)
 
 	if (info->uriState == STRACE_RAW_URI) {
 		LM_BUG("uriState must be either UNUSED or PARSED here! must be a bug! Message won't be traced!\n");
-		abort();
 		return;
 	}
 
@@ -1789,7 +1792,6 @@ static void trace_transaction(sip_msg_t* msg, siptrace_info_t* info)
 		return;
 	}
 
-	/* TODO */
 	/* check the following callbacks: TMCB_REQUEST_PENDING, TMCB_RESPONSE_READY, TMCB_ACK_NEG_IN */
 	/* trace reply on in */
 	if(tmb.register_tmcb(msg, 0, TMCB_ACK_NEG_IN, trace_tm_neg_ack_in, info, 0) <= 0) {
