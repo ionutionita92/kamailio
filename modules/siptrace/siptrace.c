@@ -778,7 +778,6 @@ static int parse_siptrace_uri(str* duri, struct dest_info* dst)
 	p = mk_proxy(&uri.host, (uri.port_no) ? uri.port_no : SIP_PORT, dst->proto);
 	if(p == 0) {
 		LM_ERR("bad host name in uri\n");
-		pkg_free(dst);
 		return -1;
 	}
 
@@ -1765,6 +1764,11 @@ static void trace_sl_onreply_out(sl_cbp_t *slcbp)
 
 static void trace_transaction(sip_msg_t* msg, siptrace_info_t* info)
 {
+	if (msg == NULL) {
+		LM_DBG("nothing to trace\n");
+		return;
+	}
+
 	/* trace current message on out */
 	msg->msg_flags |= FL_SIPTRACE;
 	if (info->uriState == STRACE_RAW_URI) {
@@ -1869,6 +1873,12 @@ static void trace_dialog_transaction(struct dlg_cell* dlg, int type, struct dlg_
 	memset(info, 0, sizeof(siptrace_info_t));
 	if (deserialize_siptrace_info(dlgb.get_dlg_var(dlg, &siptrace_info_dlgkey), info)) {
 		LM_ERR("failed to parse data from dialog key\n");
+		return;
+	}
+
+	/* coverity fix - there shouldn't be a scenario for this to happen */
+	if (params == NULL) {
+		LM_ERR("NULL tm params!\n");
 		return;
 	}
 
